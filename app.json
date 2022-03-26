@@ -30,6 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#3490dc"
       },
+
       "package": "com.aneerudh.Eventofy",
       "googleServicesFile": "./google-services.json"
     },

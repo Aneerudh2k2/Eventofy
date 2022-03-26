@@ -13,8 +13,10 @@ import {
   Image,
 } from "react-native";
 import LottieView from "lottie-react-native";
+import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import { SimpleLineIcons } from "@expo/vector-icons";
-import * as GoogleSignIn from "expo-google-sign-in";
+import { get_access_token, save_access_token } from "../utils/securestore";
 
 export default function SignIn({ navigation }) {
   const [user, setUser] = useState(null);
@@ -27,40 +29,48 @@ export default function SignIn({ navigation }) {
   }, []);
 
   useEffect(() => {
-    initAsync();
+    // initAsync();
   }, []);
 
-  const initAsync = async () => {
-    await GoogleSignIn.initAsync({
-      // You may ommit the clientId when the firebase `googleServicesFile` is configured
-      clientId:
-        "638838132918-61e00bng7aegqt4495tr20r07f2g0c06.apps.googleusercontent.com",
-    });
-    _syncUserWithStateAsync();
-  };
-
-  const _syncUserWithStateAsync = async () => {
-    const user = await GoogleSignIn.signInSilentlyAsync();
-    setUser({ user });
-  };
-
-  const signOutAsync = async () => {
-    await GoogleSignIn.signOutAsync();
-    setUser({ user: null });
-  };
-
-  const signInAsync = async () => {
+  const handleOAuthLogin = async () => {
+    let redirectUrl = await Linking.makeUrl("/");
+    console.log(redirectUrl);
+    let authUrl = `http://b5bc-2401-4900-483f-883b-c9ec-5205-d52b-34d2.ngrok.io/login?redirectUri=${redirectUrl}`;
     try {
-      await GoogleSignIn.askForPlayServicesAsync();
-      const { type, user } = await GoogleSignIn.signInAsync();
-      if (type === "success") {
-        _syncUserWithStateAsync();
+      let authresult = await WebBrowser.openAuthSessionAsync(
+        authUrl,
+        redirectUrl
+      );
+      let temp;
+      console.log("auth result: ", authresult, "\n");
+      if (authresult.type === "success") {
+        temp = await Linking.parse(authresult.url);
+        save_access_token(temp.queryParams.token);
+        navigation.navigate("Pivot");
       }
-    } catch ({ message }) {
-      alert("login: Error:" + message);
+    } catch (e) {
+      console.log("handleOAuthlogin error: ", e);
     }
   };
 
+  const sendNotification = async () => {
+    let response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "Accept-Encoding": "gzip, deflate",
+      },
+      body: JSON.stringify({
+        to: "ExponentPushToken[ty5UqBNa_oUQWRpwGUVB1T]",
+        title: "Original Title",
+        body: "And here is the body!",
+        data: { someData: "goes here" },
+      }),
+    });
+
+    console.log(await response.json());
+  };
   // useEffect(() => {
   //   keyboardWillShowSub.remove();
   //   keyboardWillHideSub.remove();
@@ -156,7 +166,8 @@ export default function SignIn({ navigation }) {
                 height: minimizeLottie ? 150 : 285,
                 width: minimizeLottie ? 150 : 285,
               }}
-              source={require("../assets/68030-user-profile.json")}
+              source={require("../assets/lottie_json/68030-user-profile.json")}
+
               // OR find more Lottie files @ https://lottiefiles.com/featured
               // Just click the one you like, place that file in the 'assets' folder to the left, and replace the above 'require' statement
             />
@@ -203,6 +214,7 @@ export default function SignIn({ navigation }) {
               flex: 0.85,
               width: "90%",
               height: "90%",
+              marginTop: 25,
               // borderWidth: 1,
               // justifyContent: "space-around",
               alignItems: "center",
@@ -231,7 +243,7 @@ export default function SignIn({ navigation }) {
                 alignItems: "center",
               }}
             >
-              {/* <View
+              <View
                 style={{
                   margin: 5,
                   flexDirection: "row",
@@ -251,9 +263,9 @@ export default function SignIn({ navigation }) {
                     style={{ width: 250, height: 45 }}
                   />
                 </View>
-              </View> */}
+              </View>
 
-              {/* <View
+              <View
                 style={{
                   margin: 5,
                   flexDirection: "row",
@@ -272,7 +284,7 @@ export default function SignIn({ navigation }) {
                     style={{ width: 250, height: 45 }}
                   />
                 </View>
-              </View> */}
+              </View>
 
               <View
                 style={{
@@ -280,40 +292,42 @@ export default function SignIn({ navigation }) {
                   alignItems: "center",
                   backgroundColor: "#3490dc",
                   borderRadius: 12,
-                  padding: 10,
+                  padding: 8,
                 }}
               >
-                <Image
+                {/* <Image
                   source={require("../assets/google.png")}
                   style={{ width: 35, height: 35, padding: 5 }}
-                />
+                /> */}
                 <TouchableOpacity
                   style={{
                     borderRadius: 12,
-                    paddingLeft: 15,
-                    padding: 10,
+                    padding: 6,
                     justifyContent: "center",
                     alignItems: "center",
                   }}
                   onPress={() => {
                     // resetAnimation();
-                    // navigation.navigate("Pivot");
-                    signInAsync();
+                    navigation.navigate("Pivot");
+                    // handleOAuthLogin();
+                    // sendNotification();
+                    // signInAsync();
                   }}
                 >
                   <Text
                     style={{
                       fontFamily: "Roboto",
-                      fontSize: 20,
+                      fontSize: 16,
                       color: "#fff",
                     }}
                   >
-                    Sign in with google
+                    {/* Sign in with google */}
+                    Sign in
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* <View style={{ flexDirection: "row" }}>
+              <View style={{ flexDirection: "row" }}>
                 <Text style={{ color: "#6d7275" }}>
                   Don't have an account?{" "}
                 </Text>
@@ -322,7 +336,7 @@ export default function SignIn({ navigation }) {
                     Create one
                   </Text>
                 </TouchableOpacity>
-              </View> */}
+              </View>
             </View>
           </View>
         </View>
@@ -335,7 +349,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#3490dc",
-    borderWidth: 1,
+    // borderWidth: 1,
     alignItems: "center",
   },
 });

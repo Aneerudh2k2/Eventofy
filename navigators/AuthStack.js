@@ -15,7 +15,7 @@ const AuthStack = ({ navigation }) => {
   useEffect(() => {
     AsyncStorage.getItem("alreadyLaunched").then((value) => {
       if (value === null) {
-        AsyncStorage.setItem("alreadyLaunched", true);
+        AsyncStorage.setItem("alreadyLaunched", "true");
         setFirstLaunch(true);
       } else {
         // change it to false

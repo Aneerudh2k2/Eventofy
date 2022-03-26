@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import LottieView from "lottie-react-native";
 import "react-native-gesture-handler";
 import AuthStack from "./navigators/AuthStack";
 
